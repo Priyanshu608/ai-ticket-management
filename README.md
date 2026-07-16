@@ -44,6 +44,40 @@ uvicorn src.api:app --reload
 
 Prompts are versioned in `src/triage/prompts.py` with a changelog.
 
+## Task 2 — Account Health Briefs (for TAMs)
+
+Given an `account_id`, produce a TAM-facing health brief: an overall **risk
+level**, the **churn/health signals** behind it, a digest of any linked
+tickets, an **executive summary**, and **prioritized recommended actions**.
+
+**Design:** churn signals and the overall risk level are computed by
+**deterministic rules** in `src/briefs/signals.py` (health status, usage trend,
+seat utilization, NPS, P1 volume, open-ticket load, renewal proximity, QBR
+staleness, login recency, and the curated `escalation_notes`). The LLM only
+writes the narrative (summary + actions), grounded strictly in those
+pre-computed signals — so the numbers and the risk level are reproducible and
+auditable, and the brief degrades to a deterministic fallback if the LLM is
+unavailable. The computed risk can deliberately disagree with the CRM
+`health_status` label (e.g. an account marked "Healthy" but underadopted with a
+stale QBR surfaces as Medium/High) — surfacing that gap is the point.
+
+The ticket↔account join is intentionally sparse in the dataset (most
+`ticket.account_id` values don't match `accounts.json`), so briefs are driven
+by the account record and treat linked tickets as best-effort enrichment.
+
+**Sample run (CLI):**
+
+```bash
+python scripts/demo_brief.py              # churning + at-risk + healthy examples
+python scripts/demo_brief.py ACC-3336     # a specific account
+```
+
+**REST endpoint:**
+
+```bash
+# GET /accounts/{account_id}/brief   -> structured AccountBrief  (404 if unknown)
+```
+
 ## Project layout
 
 ```
@@ -61,8 +95,14 @@ src/
     responder.py       # LLM call 2 (KB match + draft reply)
     router.py          # deterministic team routing
     pipeline.py        # orchestration: triage_ticket()
+  briefs/
+    signals.py         # deterministic churn/health signals + risk level
+    prompts.py         # versioned brief prompt + changelog
+    generator.py       # LLM narrative (grounded) + deterministic fallback
+    pipeline.py        # orchestration: generate_brief(account_id)
   api.py               # FastAPI app (entry point)
 scripts/
   demo_triage.py       # sample run vs ground-truth labels
+  demo_brief.py        # sample account health briefs
 tests/                 # Task 3
 ```
