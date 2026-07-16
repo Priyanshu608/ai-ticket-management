@@ -1,9 +1,25 @@
-"""Central configuration for the application."""
+"""Central configuration for the application.
+
+Imported first by every network-touching module, so this is where we make
+Python trust the OS certificate store. On machines behind a TLS-inspecting
+proxy (corporate Zscaler-style setups) the proxy's root CA lives in the OS
+trust store but not in certifi's bundle, so Groq / HuggingFace calls fail with
+CERTIFICATE_VERIFY_FAILED. truststore fixes that without disabling verification;
+it's a no-op on a normal network. Best-effort: if truststore isn't installed we
+carry on with the default cert bundle.
+"""
 
 import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+try:
+    import truststore
+
+    truststore.inject_into_ssl()
+except Exception:  # truststore missing or injection failed -> default certs
+    pass
 
 load_dotenv()
 

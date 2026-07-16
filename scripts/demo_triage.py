@@ -6,6 +6,13 @@ import sys
 import time
 from pathlib import Path
 
+# KB docs and LLM output contain Unicode (em-dash, non-breaking hyphen) that the
+# default Windows console (cp1252) can't encode. Force UTF-8 so printing works.
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except (AttributeError, ValueError):
+    pass
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.data_loader import load_tickets  # noqa: E402
