@@ -10,10 +10,21 @@ from pathlib import Path
 from .. import config
 
 
+def _doc_path(md_file: Path, kb_dir: Path) -> str:
+    """Stable citation path: relative to the repo root when the file lives
+    under it (the normal case), else relative to the kb_dir passed in."""
+    for base in (config.ROOT_DIR, kb_dir):
+        try:
+            return str(md_file.relative_to(base))
+        except ValueError:
+            continue
+    return md_file.name
+
+
 def chunk_kb(kb_dir: Path = config.KB_DIR) -> list[dict]:
     chunks = []
     for md_file in sorted(kb_dir.rglob("*.md")):
-        rel_path = str(md_file.relative_to(config.ROOT_DIR))
+        rel_path = _doc_path(md_file, kb_dir)
         text = md_file.read_text(encoding="utf-8")
         current_heading = md_file.stem
         for raw in text.split("\n---\n"):

@@ -9,6 +9,9 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# Eval predictions cache + generated reports
+eval_output/
+
 # VS Code / OS
 .vscode/
 .idea/
