@@ -78,6 +78,55 @@ python scripts/demo_brief.py ACC-3336     # a specific account
 # GET /accounts/{account_id}/brief   -> structured AccountBrief  (404 if unknown)
 ```
 
+## Task 3 — Evaluation & Tests
+
+Two layers of quality measurement, plus a deterministic unit suite.
+
+**1. Classification eval** (`src/eval/harness.py`) — scores the triage
+classifier against the dataset's ground-truth labels on a deterministic random
+sample: accuracy + macro-F1 + per-class precision/recall for category, urgency
+accuracy with a **within-1** tolerance and a confusion matrix, and product
+accuracy. Predictions are **cached to disk** keyed by `(model, prompt_version,
+ticket_id)`, so growing the sample or re-running never re-calls tickets already
+scored (free-tier friendly). Category disagreements vs ground truth are listed —
+many are genuinely ambiguous labels, which the report calls out rather than
+hides.
+
+**2. LLM-judge** (`src/eval/judge.py`) — the draft first-response has no ground
+truth, so a separate LLM scores each draft on **groundedness, relevance,
+actionability, and tone** (1–5) plus a hallucination flag, aggregated into a
+`hallucination_rate`. This measures the generation surface that accuracy metrics
+can't.
+
+**3. Adversarial suite** (`src/eval/adversarial.py`) — hand-written edge cases
+probing *robustness*, not dataset accuracy: data-loss-beats-generic-bug, angry
+tone vs trivial impact (must not inflate to P1), how-to vs feature-request
+ambiguity, a **prompt-injection** attempt (must not leak/obey), a clear P1
+outage (no guaranteed-deadline promises), and near-empty input (must not crash,
+must stay schema-valid). Each case asserts a *property* of the output rather than
+a single gold label.
+
+**Run it:**
+
+```bash
+python scripts/run_eval.py --n 40                 # classification eval, 40 tickets
+python scripts/run_eval.py --n 40 --judge 8       # + LLM-judge 8 draft responses
+python scripts/run_eval.py --adversarial          # only the edge-case suite
+python scripts/run_eval.py --n 40 --refresh       # ignore the prediction cache
+```
+
+Predictions and a timestamped JSON report land in `eval_output/` (git-ignored).
+
+**4. Unit tests** (`tests/`, `pytest`) — deterministic, no network required,
+covering the non-LLM logic: KB chunker citation paths, metric implementations,
+team-routing rules, Pydantic schema validation, and the churn/health signal
+rules.
+
+```bash
+pytest                    # 27 tests
+pytest -m "not llm"       # skip any live-LLM tests
+```
+
 ## Project layout
 
 ```
@@ -101,8 +150,14 @@ src/
     generator.py       # LLM narrative (grounded) + deterministic fallback
     pipeline.py        # orchestration: generate_brief(account_id)
   api.py               # FastAPI app (entry point)
+  eval/                # Task 3
+    harness.py         # classification eval + cached predictions
+    metrics.py         # accuracy / macro-F1 / confusion / within-1
+    judge.py           # LLM-judge for draft-response quality
+    adversarial.py     # edge-case / robustness suite
 scripts/
   demo_triage.py       # sample run vs ground-truth labels
   demo_brief.py        # sample account health briefs
-tests/                 # Task 3
+  run_eval.py          # eval CLI -> eval_output/ JSON report
+tests/                 # unit suite (chunker, metrics, router, schemas, signals)
 ```
