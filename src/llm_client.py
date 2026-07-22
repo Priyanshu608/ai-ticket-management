@@ -8,6 +8,7 @@ import time
 from groq import Groq
 
 from . import config
+from .text_utils import sanitize
 
 _client = Groq(api_key=config.GROQ_API_KEY)
 
@@ -31,7 +32,9 @@ def chat_json(system: str, user: str, max_retries: int = 3) -> dict:
                     {"role": "user", "content": user},
                 ],
             )
-            return json.loads(resp.choices[0].message.content)
+            # models occasionally emit UTF-8-as-cp1252 mojibake -- repair it
+            # here so every downstream consumer gets clean text.
+            return sanitize(json.loads(resp.choices[0].message.content))
         except Exception as e:  # 429s, network blips, malformed JSON
             last_err = e
             time.sleep(2**attempt)  # 1s, 2s, 4s
