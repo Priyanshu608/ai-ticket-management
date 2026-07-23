@@ -12,9 +12,6 @@ __pycache__/
 # Eval predictions cache + generated reports
 eval_output/
 
-# Local one-off scheduled-run wrapper (machine-specific)
-scripts/run_eval_scheduled.bat
-
 # VS Code / OS
 .vscode/
 .idea/
