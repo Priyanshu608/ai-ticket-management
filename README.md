@@ -96,7 +96,8 @@ hides.
 truth, so a separate LLM scores each draft on **groundedness, relevance,
 actionability, and tone** (1–5) plus a hallucination flag, aggregated into a
 `hallucination_rate`. This measures the generation surface that accuracy metrics
-can't.
+can't. The judge receives the ticket **and the matched KB excerpt text**, so it
+verifies each claim against the actual source rather than guessing (`judge_v2`).
 
 **3. Adversarial suite** (`src/eval/adversarial.py`) — hand-written edge cases
 probing *robustness*, not dataset accuracy: data-loss-beats-generic-bug, angry
@@ -117,13 +118,37 @@ python scripts/run_eval.py --n 40 --refresh       # ignore the prediction cache
 
 Predictions and a timestamped JSON report land in `eval_output/` (git-ignored).
 
+### Results — hallucination hardening
+
+The LLM-judge drove a concrete improvement to the responder. The initial prompt
+(`respond_v1`) drafted fluent, well-toned replies but **invented** root causes,
+error codes, and ETAs — usually by borrowing details from a retrieved excerpt
+that was topically near but did not address the ticket (FAISS always returns its
+top-k, even when nothing truly matches). Rewriting the responder prompt
+(`respond_v2`: a two-source grounding contract, a relevance gate, a structural
+no-match branch, an itemised never-invent list, a silent pre-send checklist, and
+few-shot examples) moved the numbers on the same 10 judged tickets:
+
+| Metric (n=10)      | respond_v1 | respond_v2 |
+|--------------------|:----------:|:----------:|
+| Groundedness       |   3.4 / 5  | **5.0 / 5** |
+| Hallucination rate |    60%     |  **0%**    |
+| Actionability      |   4.9 / 5  |  5.0 / 5   |
+| Relevance          |   4.7 / 5  |  4.8 / 5   |
+| Tone               |   5.0 / 5  |  4.9 / 5   |
+
+Prompts are versioned with a changelog in `src/triage/prompts.py`, so the
+before/after is auditable. (A false positive surfaced along the way — the judge
+flagged a "respond within 1 business day" line that is verbatim in the KB — which
+is what prompted `judge_v2` to pass the excerpt *text*, not just the citation.)
+
 **4. Unit tests** (`tests/`, `pytest`) — deterministic, no network required,
-covering the non-LLM logic: KB chunker citation paths, metric implementations,
-team-routing rules, Pydantic schema validation, and the churn/health signal
-rules.
+covering the non-LLM logic: KB chunker citation paths, mojibake repair, metric
+implementations, team-routing rules, Pydantic schema validation, and the
+churn/health signal rules.
 
 ```bash
-pytest                    # 27 tests
+pytest                    # 35 tests
 pytest -m "not llm"       # skip any live-LLM tests
 ```
 
@@ -134,6 +159,7 @@ src/
   config.py            # paths, env, model + determinism settings
   schemas.py           # Pydantic contract (TicketInput, Classification, TriageResult)
   llm_client.py        # Groq wrapper: JSON mode, seed, retry/backoff
+  text_utils.py        # repair UTF-8-as-cp1252 mojibake in LLM output
   data_loader.py       # tickets / accounts loaders
   kb/
     chunker.py         # split KB docs on '---', heading metadata
