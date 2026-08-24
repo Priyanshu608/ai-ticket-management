@@ -6,6 +6,7 @@ Run: uvicorn src.api:app --reload
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from .briefs.pipeline import AccountNotFoundError, generate_brief
 from .schemas import AccountBrief, TicketInput, TriageResult
@@ -20,6 +21,18 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Support AI API", version="0.2.0", lifespan=lifespan)
+
+# Allow requests from the Next.js frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")
