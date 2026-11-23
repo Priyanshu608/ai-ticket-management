@@ -8,9 +8,7 @@ import {
   Terminal, 
   Sparkles, 
   Lock, 
-  AlertOctagon, 
   Cpu, 
-  Check 
 } from "lucide-react";
 
 interface MetricRow {
@@ -212,7 +210,7 @@ export default function EvalBenchmarks() {
 
                 <div>
                   <span className="text-[10px] font-mono uppercase text-zinc-500 block">Adversarial Input:</span>
-                  <p className="text-[11px] text-zinc-400 font-mono italic mt-0.5">"{item.input}"</p>
+                  <p className="text-[11px] text-zinc-400 font-mono italic mt-0.5">&quot;{item.input}&quot;</p>
                 </div>
 
                 <div className="border-t border-[#222634] pt-2">

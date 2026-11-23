@@ -3,6 +3,26 @@
 Production-style LLM tooling for Technical Support and TAM teams.
 Built on the provided mock dataset (500 tickets, 50 accounts, product knowledge base).
 
+## SupportFlow web console
+
+This repository now includes a Next.js **support operations workspace** alongside its CLI and API pipelines. The new Overview tab reads the bundled 500 synthetic tickets and 50 synthetic accounts through FastAPI. It offers searchable, paginated queues, ticket details, account risk ranking, historical ticket charts, and links into the existing AI triage and account-brief tools.
+
+**Run the workspace locally**
+
+```bash
+# Terminal 1 (repository root, after installing Python requirements)
+uvicorn src.api:app --reload
+
+# Terminal 2
+cd frontend
+npm install
+npm run dev
+```
+
+Open **http://localhost:3000**. The overview needs no LLM key and does not download embeddings on startup; AI triage still requires a backend Groq API key and may initialize the embedding model on first use.
+
+Read the [frontend guide](frontend/README.md) for configuration, endpoint documentation, limitations, and checks. This is a **read-only exploratory interface**, not a production helpdesk. The original ticket data is unchanged, and the demo has no authentication, writes, or real customer integrations.
+
 ## Setup
 
 ```bash

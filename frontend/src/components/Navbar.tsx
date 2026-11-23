@@ -1,117 +1,67 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { 
-  Terminal, 
-  ShieldCheck, 
-  Layers, 
-  Activity, 
-  Cpu, 
-  CheckCircle2, 
-  AlertTriangle 
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Activity, BrainCircuit, ChartNoAxesColumnIncreasing, CircleCheck, CircleAlert, Command, LayoutDashboard, Users } from "lucide-react";
 import { checkBackendHealth } from "@/lib/api";
 
-interface NavbarProps {
-  activeTab: "triage" | "tam" | "evals";
-  onSelectTab: (tab: "triage" | "tam" | "evals") => void;
-}
+export type WorkspaceTab = "overview" | "triage" | "tam" | "evals";
 
-export default function Navbar({ activeTab, onSelectTab }: NavbarProps) {
-  const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
+const tabs = [
+  { id: "overview", name: "Overview", icon: LayoutDashboard },
+  { id: "triage", name: "AI Triage", icon: BrainCircuit },
+  { id: "tam", name: "Account Health", icon: Users },
+  { id: "evals", name: "Evaluation", icon: ChartNoAxesColumnIncreasing },
+] as const;
+
+export default function Navbar({ activeTab, onSelectTab }: {
+  activeTab: WorkspaceTab;
+  onSelectTab: (tab: WorkspaceTab) => void;
+}) {
+  const [online, setOnline] = useState<boolean | null>(null);
 
   useEffect(() => {
     let mounted = true;
-    const verifyHealth = async () => {
-      const isHealthy = await checkBackendHealth();
-      if (mounted) setBackendOnline(isHealthy);
+    const verify = () => {
+      checkBackendHealth().then((value) => { if (mounted) setOnline(value); });
     };
-
-    verifyHealth();
-    const interval = setInterval(verifyHealth, 10000);
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
+    verify();
+    const interval = setInterval(verify, 15000);
+    return () => { mounted = false; clearInterval(interval); };
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#222634] bg-[#090a0f]/90 backdrop-blur-md px-4 py-2.5 flex items-center justify-between">
-      {/* Brand & Pipeline Engine Info */}
-      <div className="flex items-center space-x-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-600/10 border border-blue-500/30 text-blue-400">
-          <Terminal className="h-4 w-4" />
-        </div>
-        <div>
-          <div className="flex items-center space-x-2">
-            <span className="font-mono text-sm font-semibold tracking-tight text-zinc-100">
-              SUPPORT.AI
-            </span>
-            <span className="rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 text-[10px] font-mono font-medium text-zinc-400">
-              v0.2.0
-            </span>
+    <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#0b111d]/95 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-[1580px] flex-wrap items-center justify-between gap-x-5 gap-y-3 px-4 py-3 sm:px-7 lg:px-10">
+        <div className="flex min-w-[165px] items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-sky-300/20 bg-sky-400/10 text-sky-300">
+            <Command className="h-5 w-5" />
           </div>
-          <p className="text-[11px] text-zinc-500 font-mono leading-none">
-            FAISS · MiniLM · Groq Llama 3.3
-          </p>
+          <div>
+            <div className="text-base font-bold tracking-tight text-white">Support<span className="text-sky-400">Flow</span></div>
+            <p className="mt-0.5 text-[10px] uppercase tracking-[0.19em] text-slate-500">Intelligence workspace</p>
+          </div>
         </div>
-      </div>
 
-      {/* Navigation Switcher Tabs */}
-      <nav className="flex items-center space-x-1 rounded-lg border border-[#222634] bg-[#11131a] p-1">
-        <button
-          onClick={() => onSelectTab("triage")}
-          className={`flex items-center space-x-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-            activeTab === "triage"
-              ? "bg-blue-600/20 text-blue-400 border border-blue-500/40 shadow-sm"
-              : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border border-transparent"
-          }`}
-        >
-          <Cpu className="h-3.5 w-3.5" />
-          <span>Triage Studio</span>
-        </button>
+        <nav aria-label="Workspace navigation" className="order-3 flex w-full items-center gap-1 overflow-x-auto rounded-xl border border-white/[0.07] bg-white/[0.025] p-1 sm:order-2 sm:w-auto">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button key={tab.id} type="button" onClick={() => onSelectTab(tab.id)}
+                aria-current={activeTab === tab.id ? "page" : undefined}
+                className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-sky-400 ${activeTab === tab.id
+                  ? "bg-sky-500/15 text-sky-200 shadow-sm ring-1 ring-sky-500/20"
+                  : "text-slate-400 hover:bg-white/[0.06] hover:text-slate-100"}`}>
+                <Icon className="h-4 w-4" />{tab.name}
+              </button>
+            );
+          })}
+        </nav>
 
-        <button
-          onClick={() => onSelectTab("tam")}
-          className={`flex items-center space-x-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-            activeTab === "tam"
-              ? "bg-blue-600/20 text-blue-400 border border-blue-500/40 shadow-sm"
-              : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border border-transparent"
-          }`}
-        >
-          <Layers className="h-3.5 w-3.5" />
-          <span>TAM Account Matrix</span>
-        </button>
-
-        <button
-          onClick={() => onSelectTab("evals")}
-          className={`flex items-center space-x-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-            activeTab === "evals"
-              ? "bg-blue-600/20 text-blue-400 border border-blue-500/40 shadow-sm"
-              : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border border-transparent"
-          }`}
-        >
-          <ShieldCheck className="h-3.5 w-3.5" />
-          <span>Eval & Benchmarks</span>
-        </button>
-      </nav>
-
-      {/* Live Backend Telemetry Indicator */}
-      <div className="flex items-center space-x-3">
-        <div className="flex items-center space-x-1.5 rounded-full border border-zinc-800 bg-[#11131a] px-2.5 py-1 text-[11px] font-mono">
-          <Activity className="h-3 w-3 text-zinc-500" />
-          <span className="text-zinc-400">FastAPI API:</span>
-          {backendOnline === null ? (
-            <span className="text-zinc-500 animate-pulse">connecting...</span>
-          ) : backendOnline ? (
-            <span className="flex items-center text-emerald-400 font-semibold">
-              <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-400" /> 8000 ONLINE
-            </span>
-          ) : (
-            <span className="flex items-center text-amber-400 font-semibold">
-              <AlertTriangle className="h-3 w-3 mr-1 text-amber-400" /> OFFLINE
-            </span>
-          )}
+        <div role="status" aria-live="polite" className="order-2 flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.025] px-3 py-2 text-[11px] font-medium text-slate-300 sm:order-3">
+          {online === null ? <Activity className="h-3.5 w-3.5 animate-pulse text-slate-500" />
+            : online ? <CircleCheck className="h-3.5 w-3.5 text-emerald-400" />
+              : <CircleAlert className="h-3.5 w-3.5 text-amber-400" />}
+          <span>{online === null ? "Connecting" : online ? "API connected" : "API offline"}</span>
         </div>
       </div>
     </header>

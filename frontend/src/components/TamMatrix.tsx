@@ -5,13 +5,10 @@ import {
   Building2, 
   Search, 
   AlertTriangle, 
-  ShieldCheck, 
-  TrendingDown, 
   CheckCircle, 
   ListOrdered, 
   FileText, 
   Activity, 
-  Ticket 
 } from "lucide-react";
 import { AccountBrief } from "@/lib/types";
 import { fetchAccountBrief } from "@/lib/api";
@@ -22,8 +19,8 @@ const PRESET_ACCOUNTS = [
   { id: "ACC-5520", label: "ACC-5520 (Healthy / Onboarding)" },
 ];
 
-export default function TamMatrix() {
-  const [accountId, setAccountId] = useState("ACC-3336");
+export default function TamMatrix({ initialAccountId }: { initialAccountId?: string }) {
+  const [accountId, setAccountId] = useState(initialAccountId ?? "ACC-3336");
   const [brief, setBrief] = useState<AccountBrief | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
