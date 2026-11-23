@@ -322,12 +322,12 @@ export default function OperationsDashboard({ onTriage, onAccount }: Props) {
               <span>{loading ? "Updating..." : `${visibleData?.total ?? 0} records`}</span>
               <div className="flex items-center gap-3">
                 <button aria-label="Previous page" disabled={visiblePage <= 1 || loading} className="rounded-md p-1 hover:bg-white/10 disabled:opacity-30"
-                  onClick={() => { setLoading(true); view === "tickets" ? setTicketPage((p) => p - 1) : setAccountPage((p) => p - 1); }}>
+                  onClick={() => { setLoading(true); if (view === "tickets") setTicketPage((p) => p - 1); else setAccountPage((p) => p - 1); }}>
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 <span>Page {visiblePage} of {totalPages}</span>
                 <button aria-label="Next page" disabled={visiblePage >= totalPages || loading} className="rounded-md p-1 hover:bg-white/10 disabled:opacity-30"
-                  onClick={() => { setLoading(true); view === "tickets" ? setTicketPage((p) => p + 1) : setAccountPage((p) => p + 1); }}>
+                  onClick={() => { setLoading(true); if (view === "tickets") setTicketPage((p) => p + 1); else setAccountPage((p) => p + 1); }}>
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
