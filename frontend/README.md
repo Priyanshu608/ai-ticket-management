@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SupportFlow frontend
 
-## Getting Started
+The UI for the Support AI service, built with **Next.js 16**, **React 19**, TypeScript, Tailwind CSS, and Lucide icons.
 
-First, run the development server:
+## What's inside
+
+- **Overview:** dataset-backed volume trends, priority distribution, live-filtered ticket and account tables, pagination, and an inspectable ticket detail panel.
+- **AI triage:** classify a custom ticket or send one from the queue into the existing retrieval and response-generation pipeline.
+- **Account health:** use the deterministic risk rules and generated executive briefs.
+- **Evaluation:** inspect the project's recorded LLM evaluation and adversarial scenarios.
+
+The Overview tab is **read-only** and uses the synthetic records in `../data/`. It does not create, edit, or synchronize actual support tickets. The Evaluation tab displays documented benchmark examples; it does not execute new evaluations in the browser.
+
+## Run locally
+
+From the repository root, install the Python dependencies and run FastAPI:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+python -m venv .venv
+# Activate your venv, then:
+pip install -r requirements.txt
+uvicorn src.api:app --reload
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+In a second terminal:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cd frontend
+npm ci
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000). The frontend defaults to `http://127.0.0.1:8000` for the API. If the API is elsewhere, set `NEXT_PUBLIC_API_URL` before starting the frontend.
 
-## Learn More
+**No Groq key is needed for the Overview tab.** Running AI triage requires `GROQ_API_KEY` in the backend's local `.env` file and may download an embedding model on its first request. Never put secrets in `NEXT_PUBLIC_*` variables.
 
-To learn more about Next.js, take a look at the following resources:
+## Backend endpoints used
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/health` | Backend connection indicator |
+| GET | `/operations/summary` | Counts and monthly aggregates over sample data |
+| GET | `/operations/tickets` | Search, status, priority and pagination |
+| GET | `/operations/accounts` | Search, risk and pagination |
+| POST | `/triage` | Existing AI triage workflow |
+| GET | `/accounts/{account_id}/brief` | Existing account health brief |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+For interactive API documentation visit [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-## Deploy on Vercel
+## Checks
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run lint
+npx tsc --noEmit
+npm run build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+At the repository root, `python -m pytest tests/test_ops.py tests/test_signals.py` runs the lightweight deterministic tests without an API key. The repository's `.github/workflows/ci.yml` automates these checks on pull requests.
+
+## Notes
+
+The sample dataset intentionally has sparse links between tickets and account records. A displayed ticket's account ID is not necessarily present in the account dataset. API errors and empty states are shown explicitly rather than substituting generated demo numbers. This application is a project showcase, not a multi-tenant or authenticated production support service.
