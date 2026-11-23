@@ -60,3 +60,56 @@ export interface AccountBrief {
     p1_count: number;
   };
 }
+
+/** Read-only synthetic support records powering the operations console. */
+export interface SupportTicket {
+  ticket_id: string;
+  account_id?: string;
+  company: string;
+  subject: string;
+  body: string;
+  product: string;
+  product_area: string;
+  category: string;
+  urgency: "P1" | "P2" | "P3" | "P4";
+  status: "Open" | "In Progress" | "Pending Customer" | "Resolved" | "Closed";
+  assigned_agent: string;
+  created_at: string;
+  updated_at: string;
+  channel: string;
+  tags: string[];
+  plan_tier: string;
+}
+
+export interface SupportAccount {
+  account_id: string;
+  company: string;
+  tam: string;
+  plan_tier: string;
+  health_status: string;
+  usage_trend: string;
+  open_tickets: number;
+  arr_usd: number;
+  renewal_date: string;
+  risk_level: "Low" | "Medium" | "High";
+}
+
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+}
+
+export interface OperationsSummary {
+  source: "synthetic_dataset";
+  total_tickets: number;
+  active_tickets: number;
+  critical_active: number;
+  total_accounts: number;
+  high_risk_accounts: number;
+  priority_counts: Record<"P1" | "P2" | "P3" | "P4", number>;
+  status_counts: Record<string, number>;
+  monthly_volume: Array<{ month: string; tickets: number }>;
+}
