@@ -5,13 +5,10 @@ import {
   Building2, 
   Search, 
   AlertTriangle, 
-  ShieldCheck, 
-  TrendingDown, 
   CheckCircle, 
   ListOrdered, 
   FileText, 
   Activity, 
-  Ticket 
 } from "lucide-react";
 import { AccountBrief } from "@/lib/types";
 import { fetchAccountBrief } from "@/lib/api";
