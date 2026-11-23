@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Activity, ArrowRight, BarChart3, Building2, ChevronLeft, ChevronRight,
   CircleAlert, Clock3, RefreshCw, Search, ShieldCheck, Sparkles, Ticket, Users,
@@ -85,29 +85,28 @@ export default function OperationsDashboard({ onTriage, onAccount }: Props) {
   }, [refresh]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setQuery(draftQuery), 250);
+    const timer = setTimeout(() => { setQuery(draftQuery); setTicketPage(1); setAccountPage(1); setLoading(true); }, 250);
     return () => clearTimeout(timer);
   }, [draftQuery]);
 
-  useEffect(() => { setTicketPage(1); setAccountPage(1); }, [query, status, priority, risk]);
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
-    setQueueError("");
     const request = view === "tickets"
       ? fetchTicketQueue({ query, status, priority, page: ticketPage }, controller.signal)
           .then(setTickets)
       : fetchAccountQueue({ query, risk, page: accountPage }, controller.signal)
           .then(setAccounts);
-    request.catch((err: Error) => {
-      if (!controller.signal.aborted) setQueueError(err.message);
-    }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    request.then(() => {
+      if (!controller.signal.aborted) { setQueueError(""); setLoading(false); }
+    }).catch((err: Error) => {
+      if (!controller.signal.aborted) { setQueueError(err.message); setLoading(false); }
+    });
     return () => controller.abort();
   }, [view, query, status, priority, risk, ticketPage, accountPage, refresh]);
 
   const trend = summary?.monthly_volume ?? [];
-  const maxMonth = useMemo(() => Math.max(1, ...trend.map((point) => point.tickets)), [trend]);
+  const maxMonth = Math.max(1, ...trend.map((point) => point.tickets));
   const visiblePage = view === "tickets" ? ticketPage : accountPage;
   const visibleData = view === "tickets" ? tickets : accounts;
   const totalPages = visibleData?.pages ?? 1;
@@ -117,6 +116,7 @@ export default function OperationsDashboard({ onTriage, onAccount }: Props) {
     setDraftQuery("");
     setQuery("");
     setSelected(null);
+    setLoading(true);
   }
 
   return (
@@ -137,7 +137,7 @@ export default function OperationsDashboard({ onTriage, onAccount }: Props) {
               to an evidence-informed AI triage. All numbers below come from the bundled sample dataset.
             </p>
           </div>
-          <button onClick={() => setRefresh((n) => n + 1)}
+          <button onClick={() => { setLoading(true); setRefresh((n) => n + 1); }}
             className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-medium text-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-sky-400">
             <RefreshCw className="h-3.5 w-3.5" /> Refresh snapshot
           </button>
@@ -235,13 +235,13 @@ export default function OperationsDashboard({ onTriage, onAccount }: Props) {
           {view === "tickets" ? (
             <>
               <label className="min-w-[155px]"><span className="sr-only">Filter by status</span>
-                <select className={inputStyle} value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select className={inputStyle} value={status} onChange={(e) => { setStatus(e.target.value); setTicketPage(1); setLoading(true); }}>
                   <option value="">All statuses</option>
                   {statuses.map((item) => <option key={item} value={item}>{item}</option>)}
                 </select>
               </label>
               <label className="min-w-[130px]"><span className="sr-only">Filter by priority</span>
-                <select className={inputStyle} value={priority} onChange={(e) => setPriority(e.target.value)}>
+                <select className={inputStyle} value={priority} onChange={(e) => { setPriority(e.target.value); setTicketPage(1); setLoading(true); }}>
                   <option value="">All priorities</option>
                   {priorities.map((item) => <option key={item} value={item}>{item}</option>)}
                 </select>
@@ -249,7 +249,7 @@ export default function OperationsDashboard({ onTriage, onAccount }: Props) {
             </>
           ) : (
             <label className="min-w-[140px]"><span className="sr-only">Filter by risk</span>
-              <select className={inputStyle} value={risk} onChange={(e) => setRisk(e.target.value)}>
+              <select className={inputStyle} value={risk} onChange={(e) => { setRisk(e.target.value); setAccountPage(1); setLoading(true); }}>
                 <option value="">All risk levels</option>
                 {["High", "Medium", "Low"].map((item) => <option key={item} value={item}>{item}</option>)}
               </select>
@@ -322,12 +322,12 @@ export default function OperationsDashboard({ onTriage, onAccount }: Props) {
               <span>{loading ? "Updating..." : `${visibleData?.total ?? 0} records`}</span>
               <div className="flex items-center gap-3">
                 <button aria-label="Previous page" disabled={visiblePage <= 1 || loading} className="rounded-md p-1 hover:bg-white/10 disabled:opacity-30"
-                  onClick={() => view === "tickets" ? setTicketPage((p) => p - 1) : setAccountPage((p) => p - 1)}>
+                  onClick={() => { setLoading(true); view === "tickets" ? setTicketPage((p) => p - 1) : setAccountPage((p) => p - 1); }}>
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 <span>Page {visiblePage} of {totalPages}</span>
                 <button aria-label="Next page" disabled={visiblePage >= totalPages || loading} className="rounded-md p-1 hover:bg-white/10 disabled:opacity-30"
-                  onClick={() => view === "tickets" ? setTicketPage((p) => p + 1) : setAccountPage((p) => p + 1)}>
+                  onClick={() => { setLoading(true); view === "tickets" ? setTicketPage((p) => p + 1) : setAccountPage((p) => p + 1); }}>
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
