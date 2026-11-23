@@ -41,8 +41,8 @@ const PRESET_TICKETS: { label: string; data: TicketInput }[] = [
   },
 ];
 
-export default function TriageStudio() {
-  const [ticket, setTicket] = useState<TicketInput>(PRESET_TICKETS[0].data);
+export default function TriageStudio({ initialTicket }: { initialTicket?: TicketInput }) {
+  const [ticket, setTicket] = useState<TicketInput>(initialTicket ?? PRESET_TICKETS[0].data);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [result, setResult] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
