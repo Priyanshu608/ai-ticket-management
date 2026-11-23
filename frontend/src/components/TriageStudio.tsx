@@ -11,7 +11,7 @@ import {
   Check, 
   Cpu 
 } from "lucide-react";
-import { TicketInput, TriageResult } from "@/lib/types";
+import { TicketInput } from "@/lib/types";
 import { submitTriage } from "@/lib/api";
 
 const PRESET_TICKETS: { label: string; data: TicketInput }[] = [
