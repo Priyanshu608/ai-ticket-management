@@ -15,7 +15,7 @@ uvicorn src.api:app --reload
 
 # Terminal 2
 cd frontend
-npm ci
+npm install
 npm run dev
 ```
 
