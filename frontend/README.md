@@ -26,7 +26,7 @@ In a second terminal:
 
 ```bash
 cd frontend
-npm ci
+npm install
 npm run dev
 ```
 
@@ -47,8 +47,7 @@ Open [http://localhost:3000](http://localhost:3000). The frontend defaults to `h
 
 For interactive API documentation visit [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-## Checks
-
+Note: the checked-in npm lockfile currently needs regeneration for a strict \`npm ci\` install. Until the lockfile is synchronized, use \`npm install\` for local setup and CI.\n\n## Checks\n
 ```bash
 npm run lint
 npx tsc --noEmit
